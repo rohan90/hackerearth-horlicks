@@ -61,7 +61,7 @@ var GameOverLayer = cc.LayerColor.extend({
         cc.sys.cleanScript("src/global.js");
         cc.sys.cleanScript("src/resources.js");
         cc.sys.cleanScript("main.js");
-        cc.game.restart();
+        //cc.game.restart();
         cc.director.runScene(new MenuScene());
     },
     onPostScore : function(){

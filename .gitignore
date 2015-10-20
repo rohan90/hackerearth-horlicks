@@ -2,3 +2,4 @@
 simulator/
 frameworks/
 publish/
+staticHttpServer/node_modules/

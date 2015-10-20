@@ -31,8 +31,6 @@ var StatusLayer = cc.Layer.extend({
     },
 
     init:function () {
-        this._super();
-
         var winsize = cc.director.getWinSize();
 
         this.labelScore = new cc.LabelTTF("Score:0", "Helvetica", 25);

@@ -5,27 +5,29 @@
 var PlayScene = cc.Scene.extend({
     _cows: [],
     _projectiles: [],
-    statusLayer:{},
-    gameTime:30,//default
+    statusLayer: {},
+    gameTime: 30,//default
 
-    ctor:function () {
+    ctor: function () {
         this._super();
     },
-    ctor:function (num) {
+    ctor: function (num) {
         this._super();
-        this.gameTime=num;
-        cc.log(""+num);
+        this.gameTime = num;
+        this._gameTime = num;
+        cc.log("" + num);
         this.init();
+        this.initStatusLayer();
     },
-    init:function(){
+    init: function () {
         //add three layer in the right order
         this.addChild(new BackgroundLayer());
         this.addChild(new AnimationLayer());
         cc.log(this.gameTime)
-        this.addChild(new StatusLayer(this.gameTime));
 
-        this.statusLayer = this.getChildByName("StatusLayer")
-        cc.log(this.statusLayer);
+        //this.addChild(new StatusLayer(this.gameTime));
+        //cc.log(this.statusLayer);
+
     },
     onEnter: function () {
         this._super();
@@ -41,15 +43,17 @@ var PlayScene = cc.Scene.extend({
         cc.eventManager.addListener(eventListener, this);
 
 
-
-        if('touches' in cc.sys.capabilities){
-            this.setTouchMode(cc.TOUCHES_ONE_BY_ONE);
-        }
+        /*if('touches' in cc.sys.capabilities){
+         this.setTouchMode(cc.TOUCHES_ONE_BY_ONE);
+         }*/
         {
             if (cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID) {
                 this.createBackButtonListener();
             }
         }
+
+        //this.statusLayer = this.getChildByName("StatusLayer")
+        //cc.log(this.statusLayer);
 
         this.scheduleUpdate();
         this.schedule(this.gameLogic, 0.5);
@@ -61,11 +65,13 @@ var PlayScene = cc.Scene.extend({
         this.addProjectile(touch.getLocation())
     },
     addProjectile: function (location) {
-        cc.log("Touched at "+ location.x+","+location.y);
-        if(!this.statusLayer.canFire()){
+        cc.log("Touched at " + location.x + "," + location.y);
+        //if (!this.statusLayer.canFire()) {
+        if (!this.canFire()) {
             return;
         }
-        this.statusLayer.updateAmmo(1);
+        //this.statusLayer.updateAmmo(1);
+        this.updateAmmo(1);
 
         var winSize = cc.winSize;
         // Set up initial location of the projectile
@@ -112,22 +118,23 @@ var PlayScene = cc.Scene.extend({
         var size = cc.winSize;
 
         var num = Math.floor(Math.random() * 7) + 1
-        var cow ;
-        switch (num){
-            case 1:2
-                cow = new Cow(res.cow5,-2);
+        var cow;
+        switch (num) {
+            case 1:
+                2
+                cow = new Cow(res.cow5, -2);
                 break;
             case 3:
-                cow = new Cow(res.cow2,1);
+                cow = new Cow(res.cow2, 1);
                 break;
             case 4:
-                cow = new Cow(res.cow3,1.5);
+                cow = new Cow(res.cow3, 1.5);
                 break;
             case 5:
-                cow = new Cow(res.cow4,4);
+                cow = new Cow(res.cow4, 4);
                 break;
             default:
-                cow = new Cow(res.cow1,1);
+                cow = new Cow(res.cow1, 1);
                 break;
         }
 
@@ -168,17 +175,22 @@ var PlayScene = cc.Scene.extend({
 
     },
     update: function (dt) {
-        this.statusLayer.updateTime(dt);
+        //this.statusLayer.updateTime(dt);
+        this.updateTime(dt);
 
-        if(this.statusLayer.isTimeOver()){
+        //if (this.statusLayer.isTimeOver()) {
+        if (this.isTimeOver()) {
             cc.log("==game over");
-            var score = this.statusLayer.getScore();
-            var totalTime = parseInt(this.statusLayer.getTotalPlayTime());
-            var gameTime = this.statusLayer.getGameTime();
+            //var score = this.statusLayer.getScore();
+            //var totalTime = parseInt(this.statusLayer.getTotalPlayTime());
+            //var gameTime = this.statusLayer.getGameTime();
+            var score = this.getScore();
+            var totalTime = parseInt(this.getTotalPlayTime());
+            var gameTime = this.getGameTime();
 
-            cc.log("Score: "+score+" in "+totalTime+"s\nTime Challenge:"+gameTime+"s");
+            cc.log("Score: " + score + " in " + totalTime + "s\nTime Challenge:" + gameTime + "s");
             cc.director.pause();
-            this.addChild(new GameOverLayer(score,totalTime,gameTime));
+            this.addChild(new GameOverLayer(score, totalTime, gameTime));
         }
 
         for (var i = 0; i < this._projectiles.length; i++) {
@@ -189,7 +201,8 @@ var PlayScene = cc.Scene.extend({
                 var cowRect = cow.getBoundingBox();
                 if (cc.rectIntersectsRect(projectileRect, cowRect)) {
                     cc.log("collision!");
-                    this.statusLayer.addHit(1,cow.getPoints());
+                    //this.statusLayer.addHit(1, cow.getPoints());
+                    this.addHit(1, cow.getPoints());
                     cc.arrayRemoveObject(this._projectiles, projectile);
                     projectile.removeFromParent();
                     cc.arrayRemoveObject(this._cows, cow);
@@ -198,19 +211,128 @@ var PlayScene = cc.Scene.extend({
             }
         }
     },
-    createBackButtonListener: function(){
+    createBackButtonListener: function () {
         var self = this;
 
         cc.eventManager.addListener({
             event: cc.EventListener.KEYBOARD,
 
-            onKeyReleased:function(key, event) {
-                if(key == cc.KEY.back){
-                    cc.game.restart();
-                    cc.director.runScene(new MenuScene());
-                    //cc.director.end;
+            onKeyReleased: function (key, event) {
+                if (key == cc.KEY.back) {
+                    cc.director.end;
                 }
             }
         }, this);
+    },
+
+
+    //doing this because android is screwing with me
+    labelScore:null,
+    labelTime:null,
+    labelHits:null,
+    labelMiss:null,
+    labelAmmo:null,
+    score:0,
+    time:0,
+    hits:0,
+    miss:0,
+    ammo:30,
+    fired:1,//needed
+    isMinuteOver:false,
+    minuteCount:1,
+    gameTime:30,//default 30
+    _gameTime:30,
+
+    initStatusLayer:function () {
+        var winsize = cc.director.getWinSize();
+
+        this.labelScore = new cc.LabelTTF("Score:0", "Helvetica", 25);
+        //this.labelScore.setColor(cc.color(0,0,0));//black color
+        this.labelScore.setPosition(cc.p(70, winsize.height - 25));
+        this.addChild(this.labelScore);
+
+        this.labelAmmo = new cc.LabelTTF("Horlicks:0", "Helvetica", 25);
+        this.labelAmmo.setPosition(cc.p(90, winsize.height - 60));
+        this.addChild(this.labelAmmo);
+
+        this.labelTime = new cc.LabelTTF("Time:0s", "Helvetica", 25);
+        this.labelTime.setPosition(cc.p(winsize.width - 70, winsize.height - 25));
+        this.addChild(this.labelTime);
+
+        this.labelHits = new cc.LabelTTF("Hits:0", "Helvetica", 25);
+        this.labelHits.setPosition(cc.p(winsize.width - 70, winsize.height - 70));
+        this.addChild(this.labelHits);
+
+        this.labelMiss = new cc.LabelTTF("Miss:0", "Helvetica", 25);
+        this.labelMiss.setPosition(cc.p(winsize.width - 70, winsize.height - 100));
+        this.addChild(this.labelMiss);
+
+    },
+    updateTime:function (px) {
+        this.time += px;
+
+
+        if(parseInt(this.time)/60 >= this.minuteCount && !this.isMinuteOver){
+            this.isMinuteOver = true;
+            this.minuteCount++;
+            this.ammo +=30;
+        }else{
+            this.isMinuteOver = false;
+        }
+
+        this.labelTime.setString("Time: "+ parseInt(this.gameTime)+ " s");
+        this.labelAmmo.setString("Horlicks: "+ this.ammo);
+
+        this.gameTime -= px;
+        if(this.isTimeOver()){
+            cc.log("===gameover")
+        }
+
+    },
+    addHit:function (num,points) {
+        this.hits += num;
+        this.ammo +=0.75*points;
+        this.score+=points;
+
+        //TODO modify this formulae
+        this.gameTime += this.hits/(this.fired-this.hits)*points;
+
+        this.labelScore.setString("Score:" + this.score);
+        this.labelHits.setString("Hits:" + this.hits);
+        this.labelMiss.setString("Miss:" + parseInt(this.fired - this.hits));
+    },
+    addMiss:function (num) {
+        this.miss += num;
+        this.labelMiss.setString("Miss:" + this.miss);
+    },
+    updateAmmo:function (num) {
+        this.fired += num;
+        this.ammo -= num;
+        this.labelMiss.setString("Miss:" + parseInt(this.fired - this.hits));
+    },
+    canFire:function(){
+        if(this.ammo >0){
+            return true
+        }
+        return false
+    },
+    setGameTime:function(num){
+        this.gameTime = parseInt(num);
+    },
+    isTimeOver:function(num){
+        if(this.gameTime < 0){
+            return true;
+        }
+        return false;
+    },
+    getScore: function(){
+        return this.score;
+    },
+    getTotalPlayTime: function(){
+        return this.time;
+    },
+    getGameTime: function(){
+        return this._gameTime;
     }
+
 });
