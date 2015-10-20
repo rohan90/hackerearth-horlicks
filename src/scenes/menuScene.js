@@ -47,17 +47,33 @@ var MenuLayer = cc.Layer.extend({
         var menuHighScore = new cc.Menu(menuItemHighScore);
         menuHighScore.setPosition(centerpos3);
         this.addChild(menuHighScore);
+
+        if(cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID)
+            this.createBackButtonListener();
     },
 
     onPlay : function(){
         cc.log("==onplay clicked");
-        cc.director.runScene(new PlayScene());
+        cc.director.runScene(new PlayScene(15));
     },
     onHelp :function(){
 
     },
     onHighScore : function(){
 
+    },
+    createBackButtonListener: function(){
+        var self = this;
+
+        cc.eventManager.addListener({
+            event: cc.EventListener.KEYBOARD,
+
+            onKeyReleased:function(key, event) {
+                if(key == cc.KEY.back){
+                    cc.director.end(); //this will close app
+                }
+            }
+        }, this);
     }
 });
 

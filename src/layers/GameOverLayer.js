@@ -2,9 +2,18 @@
  * Created by rohan on 20/10/15.
  */
 var GameOverLayer = cc.LayerColor.extend({
+
+    score:0,
+    gameTime:0,
+    totalTime:0,
+
     // constructor
-    ctor:function () {
+    ctor:function (score,totaltime,gameTime) {
         this._super();
+        this.score = parseInt(score);
+        this.totalTime = parseInt(totaltime);
+        this.gameTime = parseInt(gameTime);
+
         this.init();
     },
     init:function () {
@@ -32,6 +41,15 @@ var GameOverLayer = cc.LayerColor.extend({
         this.addChild(menuPostScore);
 
 
+        var scoreLabbel = new cc.LabelTTF("Score: "+this.score+" in "+this.totalTime+"s\nTime Challenege:"+this.gameTime+"s", "Arial", 38);
+        // position the label on the center of the screen
+        scoreLabbel.x = winSize.width / 2;
+        scoreLabbel.y = winSize.height - 100;
+        // add the label as a child to this layer
+        this.addChild(scoreLabbel, 5);
+
+        if(cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID)
+            this.createBackButtonListener();
     },
     onRestart:function (sender) {
         cc.sys.cleanScript("src/scenes/playScene.js");
@@ -48,5 +66,20 @@ var GameOverLayer = cc.LayerColor.extend({
     },
     onPostScore : function(){
 
+    },
+    createBackButtonListener: function(){
+        var self = this;
+
+        cc.eventManager.addListener({
+            event: cc.EventListener.KEYBOARD,
+
+            onKeyReleased:function(key, event) {
+                if(key == cc.KEY.back){
+                    cc.game.restart();
+                    cc.director.runScene(new MenuScene());
+                    //cc.director.end;
+                }
+            }
+        }, this);
     }
 });

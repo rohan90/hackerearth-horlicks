@@ -19,6 +19,7 @@
         "src/layers/AnimationLayer.js",
         "src/layers/BackgroundLayer.js",
         "src/layers/StatusLayer.js",
-        "src/layers/GameOverLayer.js"
+        "src/layers/GameOverLayer.js",
+        "src/domain/cow.js"
     ]
 }

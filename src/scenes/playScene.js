@@ -6,9 +6,30 @@ var PlayScene = cc.Scene.extend({
     _cows: [],
     _projectiles: [],
     statusLayer:{},
+    gameTime:30,//default
 
+    ctor:function () {
+        this._super();
+    },
+    ctor:function (num) {
+        this._super();
+        this.gameTime=num;
+        cc.log(""+num);
+        this.init();
+    },
+    init:function(){
+        //add three layer in the right order
+        this.addChild(new BackgroundLayer());
+        this.addChild(new AnimationLayer());
+        cc.log(this.gameTime)
+        this.addChild(new StatusLayer(this.gameTime));
+
+        this.statusLayer = this.getChildByName("StatusLayer")
+        cc.log(this.statusLayer);
+    },
     onEnter: function () {
         this._super();
+
         var eventListener = cc.EventListener.create({
 
             event: cc.EventListener.TOUCH_ONE_BY_ONE,
@@ -19,17 +40,19 @@ var PlayScene = cc.Scene.extend({
 
         cc.eventManager.addListener(eventListener, this);
 
-        //add three layer in the right order
-        this.addChild(new BackgroundLayer());
-        this.addChild(new AnimationLayer());
-        this.addChild(new StatusLayer());
 
-        this.statusLayer = this.getChildByName("StatusLayer")
 
+        if('touches' in cc.sys.capabilities){
+            this.setTouchMode(cc.TOUCHES_ONE_BY_ONE);
+        }
+        {
+            if (cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID) {
+                this.createBackButtonListener();
+            }
+        }
 
         this.scheduleUpdate();
         this.schedule(this.gameLogic, 0.5);
-
     },
     gameLogic: function (dt) {
         this.addCows()
@@ -38,6 +61,7 @@ var PlayScene = cc.Scene.extend({
         this.addProjectile(touch.getLocation())
     },
     addProjectile: function (location) {
+        cc.log("Touched at "+ location.x+","+location.y);
         if(!this.statusLayer.canFire()){
             return;
         }
@@ -86,7 +110,26 @@ var PlayScene = cc.Scene.extend({
     addCows: function () {
 
         var size = cc.winSize;
-        var cow = cc.Sprite.create(res.cow1);
+
+        var num = Math.floor(Math.random() * 7) + 1
+        var cow ;
+        switch (num){
+            case 1:2
+                cow = new Cow(res.cow5,-2);
+                break;
+            case 3:
+                cow = new Cow(res.cow2,1);
+                break;
+            case 4:
+                cow = new Cow(res.cow3,1.5);
+                break;
+            case 5:
+                cow = new Cow(res.cow4,4);
+                break;
+            default:
+                cow = new Cow(res.cow1,1);
+                break;
+        }
 
         var minY = cow.getContentSize().height / 2;
         var maxY = size.height - cow.getContentSize().height / 2 - 50;
@@ -129,8 +172,13 @@ var PlayScene = cc.Scene.extend({
 
         if(this.statusLayer.isTimeOver()){
             cc.log("==game over");
+            var score = this.statusLayer.getScore();
+            var totalTime = parseInt(this.statusLayer.getTotalPlayTime());
+            var gameTime = this.statusLayer.getGameTime();
+
+            cc.log("Score: "+score+" in "+totalTime+"s\nTime Challenge:"+gameTime+"s");
             cc.director.pause();
-            this.addChild(new GameOverLayer());
+            this.addChild(new GameOverLayer(score,totalTime,gameTime));
         }
 
         for (var i = 0; i < this._projectiles.length; i++) {
@@ -141,7 +189,7 @@ var PlayScene = cc.Scene.extend({
                 var cowRect = cow.getBoundingBox();
                 if (cc.rectIntersectsRect(projectileRect, cowRect)) {
                     cc.log("collision!");
-                    this.statusLayer.addHit(1,1);
+                    this.statusLayer.addHit(1,cow.getPoints());
                     cc.arrayRemoveObject(this._projectiles, projectile);
                     projectile.removeFromParent();
                     cc.arrayRemoveObject(this._cows, cow);
@@ -149,5 +197,20 @@ var PlayScene = cc.Scene.extend({
                 }
             }
         }
+    },
+    createBackButtonListener: function(){
+        var self = this;
+
+        cc.eventManager.addListener({
+            event: cc.EventListener.KEYBOARD,
+
+            onKeyReleased:function(key, event) {
+                if(key == cc.KEY.back){
+                    cc.game.restart();
+                    cc.director.runScene(new MenuScene());
+                    //cc.director.end;
+                }
+            }
+        }, this);
     }
 });

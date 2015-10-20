@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "name": "hellococs",
-  "description": "hellococs",
+  "name": "HolyCOW!",
+  "description": "A game for Horlicks",
   "launch_path": "/index.html",
   "icons": {
     "128": "/res/icon.png"

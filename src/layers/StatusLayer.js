@@ -17,10 +17,16 @@ var StatusLayer = cc.Layer.extend({
     fired:1,//needed
     isMinuteOver:false,
     minuteCount:1,
-    gameTime:7,
+    gameTime:30,//default 30
+    _gameTime:30,
 
     ctor:function () {
         this._super();
+    },
+    ctor:function (num) {
+        this._super();
+        this._gameTime=num;
+        this.gameTime=num;
         this.init();
     },
 
@@ -74,11 +80,11 @@ var StatusLayer = cc.Layer.extend({
     },
     addHit:function (num,points) {
         this.hits += num;
-        this.ammo +=0.75;
+        this.ammo +=0.75*points;
         this.score+=points;
 
         //TODO modify this formulae
-        this.gameTime += this.hits/(this.fired-this.hits);
+        this.gameTime += this.hits/(this.fired-this.hits)*points;
 
         this.labelScore.setString("Score:" + this.score);
         this.labelHits.setString("Hits:" + this.hits);
@@ -107,6 +113,15 @@ var StatusLayer = cc.Layer.extend({
             return true;
         }
         return false;
+    },
+    getScore: function(){
+        return this.score;
+    },
+    getTotalPlayTime: function(){
+        return this.time;
+    },
+    getGameTime: function(){
+        return this._gameTime;
     }
 
 });
