@@ -69,16 +69,17 @@ var GameOverLayer = cc.LayerColor.extend({
     textFieldEvent: function (sender, type) {
     },
     onRestart: function (sender) {
-        cc.sys.cleanScript("src/scenes/playScene.js");
-        cc.sys.cleanScript("src/scenes/menuScene.js");
-        cc.sys.cleanScript("src/layers/AnimationLayer.js");
-        cc.sys.cleanScript("src/layers/BackgroundLayer.js");
-        cc.sys.cleanScript("src/layers/StatusLayer.js");
-        cc.sys.cleanScript("src/app.js");
-        cc.sys.cleanScript("src/global.js");
-        cc.sys.cleanScript("src/resources.js");
-        cc.sys.cleanScript("main.js");
+        //cc.sys.cleanScript("src/scenes/playScene.js");
+        //cc.sys.cleanScript("src/scenes/menuScene.js");
+        //cc.sys.cleanScript("src/layers/AnimationLayer.js");
+        //cc.sys.cleanScript("src/layers/BackgroundLayer.js");
+        //cc.sys.cleanScript("src/layers/StatusLayer.js");
+        //cc.sys.cleanScript("src/app.js");
+        //cc.sys.cleanScript("src/global.js");
+        //cc.sys.cleanScript("src/resources.js");
+        //cc.sys.cleanScript("main.js");
         //cc.game.restart();
+        //cc.director.resume()
         cc.director.runScene(new MenuScene());
     },
     onPostScore: function () {
@@ -112,6 +113,7 @@ var GameOverLayer = cc.LayerColor.extend({
         if (response)
             cc.log("received scores respons.." + response);
         //cc.game.restart();
+        //cc.director.resume();
         cc.director.runScene(new MenuScene());
     },
     httpRequest: function (url, body, callback) {
@@ -129,6 +131,6 @@ var GameOverLayer = cc.LayerColor.extend({
             }
         };
         request.send(body);
-        cc.director.resume()
+        //cc.director.resume()
     }
 });

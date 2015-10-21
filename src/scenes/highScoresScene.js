@@ -43,7 +43,6 @@ var HighScoreLayer = cc.Layer.extend({
         backButton.setTouchEnabled(true);
         backButton.setPosition(cc.p(winsize.width -100,100))
         backButton.loadTextureNormal(res.back_big)
-        backButton.addClickEventListener(this.backButtonPressed,this)
         backButton.addTouchEventListener(this.backButtonPressed,this)
         this.addChild(backButton);
 

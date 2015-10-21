@@ -6,7 +6,28 @@ var PlayScene = cc.Scene.extend({
     _cows: [],
     _projectiles: [],
     statusLayer: {},
-    gameTime: 30,//default
+    gameTime: 30,
+    once: false,//default
+
+
+    //doing this because android is screwing with me
+    labelScore: null,
+    labelTime: null,
+    labelHits: null,
+    labelMiss: null,
+    labelAmmo: null,
+    score: 0,
+    time: 0,
+    hits: 0,
+    miss: 0,
+    ammo: 30,
+    fired: 1,//needed
+    isMinuteOver: false,
+    minuteCount: 1,
+    gameTime: 30,//default 30
+    _gameTime: 30,
+
+
 
     ctor: function () {
         this._super();
@@ -16,21 +37,40 @@ var PlayScene = cc.Scene.extend({
         this.gameTime = num;
         this._gameTime = num;
         cc.log("" + num);
-        this.init();
-        this.initStatusLayer();
+        this.once = true;
+        cc.log(this.gameTime)
     },
     init: function () {
         //add three layer in the right order
-        this.addChild(new BackgroundLayer());
-        this.addChild(new AnimationLayer());
-        cc.log(this.gameTime)
-
+        //this.addChild(new BackgroundLayer());
+        //this.addChild(new AnimationLayer());
         //this.addChild(new StatusLayer(this.gameTime));
         //cc.log(this.statusLayer);
 
+        var winsize = cc.director.getWinSize();
+
+
+        //create the background image and position it at the center of screen
+        var centerPos = cc.p(winsize.width / 2, winsize.height / 2);
+        var spriteBG = new cc.Sprite(res.hello_bg);
+        spriteBG.setPosition(centerPos);
+        this.addChild(spriteBG);
+
+        var playa = new cc.Sprite(res.cow1);
+        playa.attr({x: 80, y: 5});
+
+        //create the move action
+        var actionTo = new cc.MoveTo(3, cc.p(300, 5));
+        playa.runAction(new cc.Sequence(actionTo));
+        this.addChild(playa);
+
     },
     onEnter: function () {
+
         this._super();
+        this.init();
+        this.initStatusLayer();
+        var winsize = cc.director.getWinSize();
 
         var eventListener = cc.EventListener.create({
 
@@ -55,8 +95,11 @@ var PlayScene = cc.Scene.extend({
         //this.statusLayer = this.getChildByName("StatusLayer")
         //cc.log(this.statusLayer);
 
+
         this.scheduleUpdate();
         this.schedule(this.gameLogic, 0.5);
+
+        cc.log("create once? " + this.once)
 
     },
     gameLogic: function (dt) {
@@ -190,7 +233,8 @@ var PlayScene = cc.Scene.extend({
             var gameTime = this.getGameTime();
 
             cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s");
-            cc.director.pause();
+            //cc.director.pause();
+            this.reset();
             this.addChild(new GameOverLayer(score, totalTime, gameTime));
         }
 
@@ -220,31 +264,16 @@ var PlayScene = cc.Scene.extend({
 
             onKeyReleased: function (key, event) {
                 if (key == cc.KEY.back) {
-                    cc.director.end;
+                    //cc.director.end;
+                    cc.director.runScene(new MenuScene());
                 }
             }
         }, this);
     },
 
 
-    //doing this because android is screwing with me
-    labelScore: null,
-    labelTime: null,
-    labelHits: null,
-    labelMiss: null,
-    labelAmmo: null,
-    score: 0,
-    time: 0,
-    hits: 0,
-    miss: 0,
-    ammo: 30,
-    fired: 1,//needed
-    isMinuteOver: false,
-    minuteCount: 1,
-    gameTime: 30,//default 30
-    _gameTime: 30,
-
     initStatusLayer: function () {
+        cc.log("initializing hud")
         var winsize = cc.director.getWinSize();
 
         this.labelScore = new cc.LabelTTF("Milk:0", "Helvetica", 25);
@@ -334,6 +363,28 @@ var PlayScene = cc.Scene.extend({
     },
     getGameTime: function () {
         return this._gameTime;
+    },
+    reset: function () {
+        //reseting everything
+        this._cows = [],
+            this._projectiles = [],
+            this.statusLayer = {},
+            this.gameTime = 30,
+            /*this.labelScore = null,
+            this.labelTime = null,
+            this.labelHits = null,
+            this.labelMiss = null,
+            this.labelAmmo = null,*/
+            this.score = 0,
+            this.time = 0,
+            this.hits = 0,
+            this.miss = 0,
+            this.ammo = 30,
+            this.fired = 1,//needed
+            this.isMinuteOver = false,
+            this.minuteCount = 1,
+            this.gameTime = 30,//default 30
+            this._gameTime = 30
     }
 
 });

@@ -65,7 +65,7 @@ var MenuLayer = cc.Layer.extend({
         textField.setTouchEnabled(true);
         textField.fontName = "Arial";
         textField.placeHolder = "30s";
-        textField.setTextColor('black')
+        textField.setTextColor(cc.color(0,0,0))
         textField.fontSize = 30;
         textField.x = centerpos0.x;
         textField.y = centerpos0.y;
