@@ -1,6 +1,8 @@
 var res = {
-    saveScore: "http://localhost:3000/api/save",
-    fetchScores: "http://localhost:3000/api/scores",
+    //saveScore: "http://localhost:3000/api/save",
+    //fetchScores: "http://localhost:3000/api/scores",
+    saveScore: "https://frozen-reaches-9921.herokuapp.com/api/save",
+    fetchScores: "https://frozen-reaches-9921.herokuapp.com/api/scores",
 
     hello_bg : "res/hello_bg2.png",
     start_n : "res/start.png",
