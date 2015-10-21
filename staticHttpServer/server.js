@@ -30,9 +30,9 @@ var oneDay = 86400000;
 app.use(express.compress());
 app.use(express.static(process.cwd() + '/app', {maxAge: oneDay}));
 app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
+    res.header("Access-Control-Allow-Origin", "*");
     next();
 });
 app.use(bodyParser.json());
@@ -63,7 +63,7 @@ app.post('/api/save', function (req, res) {
 });
 app.get('/api/scores', function (req, res) {
     console.log('received request for a fetching scores');
-    ScoreModel.find({}, function (err, docs) {
+    ScoreModel.find({}, null, {sort: {score: -1}},function (err, docs) {
         if (err) {
             res.status(500);
             res.send({status: false, error: err});

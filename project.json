@@ -8,7 +8,7 @@
     "renderMode" : 0,
     "engineDir":"frameworks/cocos2d-html5",
 
-    "modules" : ["cocos2d"],
+    "modules" : ["cocos2d","extensions"],
 
     "jsList" : [
         "src/resource.js",
@@ -16,6 +16,8 @@
         "src/global.js",
         "src/scenes/menuScene.js",
         "src/scenes/playScene.js",
+        "src/scenes/highScoresScene.js",
+        "src/scenes/helpScene.js",
         "src/layers/AnimationLayer.js",
         "src/layers/BackgroundLayer.js",
         "src/layers/StatusLayer.js",

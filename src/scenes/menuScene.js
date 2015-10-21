@@ -3,16 +3,19 @@
  */
 //menulayer
 var MenuLayer = cc.Layer.extend({
-    ctor : function(){
+    textField: null,
+
+    ctor: function () {
         this._super();
     },
-    init:function(){
+    init: function () {
         this._super();
 
         var winsize = cc.director.getWinSize();
 
+        var centerpos0 = cc.p(winsize.width / 2, winsize.height / 2 + 160);
         var centerpos = cc.p(winsize.width / 2, winsize.height / 2 + 100);
-        var centerpos2 = cc.p(winsize.width / 2, winsize.height / 2 );
+        var centerpos2 = cc.p(winsize.width / 2, winsize.height / 2);
         var centerpos3 = cc.p(winsize.width / 2, winsize.height / 2 - 100);
 
         var spritebg = new cc.Sprite(res.hello_bg);
@@ -48,37 +51,89 @@ var MenuLayer = cc.Layer.extend({
         menuHighScore.setPosition(centerpos3);
         this.addChild(menuHighScore);
 
-        if(cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID)
+        if (cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID)
             this.createBackButtonListener();
+
+        /*var milkChallengeLabel = new cc.LabelTTF("Milk Challenge: ", "Arial", 30);
+        // position the label on the center of the screen
+        milkChallengeLabel.x = winsize.width / 2 - 300;
+        milkChallengeLabel.y = winsize.height + 160;
+        // add the label as a child to this layer
+        this.addChild(milkChallengeLabel);*/
+
+        textField = new ccui.TextField();
+        textField.setTouchEnabled(true);
+        textField.fontName = "Arial";
+        textField.placeHolder = "30s";
+        textField.setTextColor('black')
+        textField.fontSize = 30;
+        textField.x = centerpos0.x;
+        textField.y = centerpos0.y;
+        textField.setMaxLengthEnabled(true);
+        textField.setMaxLength(2);
+        textField.addEventListener(this.textFieldEvent, this);
+        this.addChild(textField);
+    },
+    textFieldEvent: function () {
+        cc.log(textField.string)
     },
 
-    onPlay : function(){
-        cc.log("==onplay clicked");
-        cc.director.runScene(new PlayScene(15));
+    onPlay: function () {
+        if (parseInt(textField.string)){
+            cc.log(parseInt(textField.string))
+            cc.director.runScene(new PlayScene(parseInt(textField.string)));
+        }else {
+            cc.director.runScene(new PlayScene(5));
+        }
     },
-    onHelp :function(){
+    onHelp: function () {
+        cc.director.runScene(new HelpScene());
+    },
+    onHighScore: function () {
+        //cc.director.runScene(new HighScoresScene());
+        this.httpRequest(res.fetchScores, this.fetchHighScores);
+    },
+    fetchHighScores: function (response) {
+        var jsonData = JSON.parse(response);
+        var data = jsonData["data"];
 
+        if (data) {
+            cc.director.runScene(new HighScoreScene(data));
+        }
     },
-    onHighScore : function(){
-
-    },
-    createBackButtonListener: function(){
+    createBackButtonListener: function () {
         var self = this;
 
         cc.eventManager.addListener({
             event: cc.EventListener.KEYBOARD,
 
-            onKeyReleased:function(key, event) {
-                if(key == cc.KEY.back){
+            onKeyReleased: function (key, event) {
+                if (key == cc.KEY.back) {
                     cc.director.end(); //this will close app
                 }
             }
         }, this);
+    },
+    httpRequest: function (url, callback) {
+        var request = cc.loader.getXMLHttpRequest();
+        request.open("GET", url, true);
+        request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+                //get status text
+                var httpStatus = request.statusText;
+
+                if (callback != null) {
+                    callback(request.responseText);
+                }
+            }
+        };
+        request.send();
     }
 });
 
 var MenuScene = cc.Scene.extend({
-    onEnter:function () {
+    onEnter: function () {
         this._super();
         var layer = new MenuLayer();
         layer.init();
