@@ -22,6 +22,7 @@
         "src/layers/BackgroundLayer.js",
         "src/layers/StatusLayer.js",
         "src/layers/GameOverLayer.js",
-        "src/domain/cow.js"
+        "src/domain/cow.js",
+        "src/domain/projectile.js"
     ]
 }

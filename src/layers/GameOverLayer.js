@@ -7,6 +7,7 @@ var GameOverLayer = cc.LayerColor.extend({
     gameTime: 0,
     totalTime: 0,
     textField: null,
+    sentOnce:false,
 
 
     // constructor
@@ -51,7 +52,7 @@ var GameOverLayer = cc.LayerColor.extend({
         // add the label as a child to this layer
         this.addChild(scoreLabbel, 5);
 
-        textField = new ccui.TextField();
+        textField = new ccui.TextField("Your name or a cheeky comment");
         textField.setTouchEnabled(true);
         textField.fontName = "Arial";
         textField.placeHolder = "Your name or a cheeky comment";
@@ -79,10 +80,12 @@ var GameOverLayer = cc.LayerColor.extend({
         //cc.sys.cleanScript("src/resources.js");
         //cc.sys.cleanScript("main.js");
         //cc.game.restart();
-        //cc.director.resume()
+        cc.director.resume()
         cc.director.runScene(new MenuScene());
     },
     onPostScore: function () {
+        if(this.sentOnce)
+            return;
         var scoreObj = {};
         scoreObj.score = this.score;
         scoreObj.timeChallenge = this.gameTime;
@@ -93,6 +96,8 @@ var GameOverLayer = cc.LayerColor.extend({
 
 
         this.httpRequest(res.saveScore, JSON.stringify(scoreObj), this.scoreSaved);
+        cc.log("sending score..pleasse wait.")
+        this.sentOnce=true;
     },
     createBackButtonListener: function () {
         var self = this;
@@ -103,6 +108,7 @@ var GameOverLayer = cc.LayerColor.extend({
             onKeyReleased: function (key, event) {
                 if (key == cc.KEY.back) {
                     //cc.game.restart();
+                    cc.director.resume()
                     cc.director.runScene(new MenuScene());
                     //cc.director.end;
                 }
@@ -112,8 +118,12 @@ var GameOverLayer = cc.LayerColor.extend({
     scoreSaved: function (response) {
         if (response)
             cc.log("received scores respons.." + response);
+
+        cc.log("score saved!.");
+        this.sentOnce = false;
+
         //cc.game.restart();
-        //cc.director.resume();
+        cc.director.resume();
         cc.director.runScene(new MenuScene());
     },
     httpRequest: function (url, body, callback) {

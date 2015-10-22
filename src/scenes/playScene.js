@@ -7,7 +7,7 @@ var PlayScene = cc.Scene.extend({
     _projectiles: [],
     statusLayer: {},
     gameTime: 30,
-    once: false,//default
+    gameStarted: false,//default
 
 
     //doing this because android is screwing with me
@@ -33,11 +33,12 @@ var PlayScene = cc.Scene.extend({
         this._super();
     },
     ctor: function (num) {
+        cc.log("gameStarted? " + this.gameStarted)
         this._super();
         this.gameTime = num;
         this._gameTime = num;
         cc.log("" + num);
-        this.once = true;
+        this.gameStarted = true;
         cc.log(this.gameTime)
     },
     init: function () {
@@ -66,7 +67,6 @@ var PlayScene = cc.Scene.extend({
 
     },
     onEnter: function () {
-
         this._super();
         this.init();
         this.initStatusLayer();
@@ -96,11 +96,8 @@ var PlayScene = cc.Scene.extend({
         //cc.log(this.statusLayer);
 
 
-        this.scheduleUpdate();
-        this.schedule(this.gameLogic, 0.5);
-
-        cc.log("create once? " + this.once)
-
+            this.scheduleUpdate();
+            this.schedule(this.gameLogic, 0.5);
     },
     gameLogic: function (dt) {
         this.addCows()
@@ -119,7 +116,7 @@ var PlayScene = cc.Scene.extend({
 
         var winSize = cc.winSize;
         // Set up initial location of the projectile
-        var projectile = cc.Sprite.create(res.s_projectile);
+        var projectile = new Projectile(res.s_projectile,1);
         projectile.setPosition(300, 2);
 
         // Determine offset of location to projectile
@@ -225,6 +222,7 @@ var PlayScene = cc.Scene.extend({
         //if (this.statusLayer.isTimeOver()) {
         if (this.isTimeOver()) {
             cc.log("==game over");
+            this.gameStarted = false;
             //var score = this.statusLayer.getScore();
             //var totalTime = parseInt(this.statusLayer.getTotalPlayTime());
             //var gameTime = this.statusLayer.getGameTime();
@@ -233,9 +231,9 @@ var PlayScene = cc.Scene.extend({
             var gameTime = this.getGameTime();
 
             cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s");
-            //cc.director.pause();
-            this.reset();
             this.addChild(new GameOverLayer(score, totalTime, gameTime));
+            this.reset()
+            cc.director.pause();
         }
 
         for (var i = 0; i < this._projectiles.length; i++) {

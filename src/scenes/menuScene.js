@@ -4,6 +4,7 @@
 //menulayer
 var MenuLayer = cc.Layer.extend({
     textField: null,
+    sentOnce:false,
 
     ctor: function () {
         this._super();
@@ -61,7 +62,7 @@ var MenuLayer = cc.Layer.extend({
         // add the label as a child to this layer
         this.addChild(milkChallengeLabel);*/
 
-        textField = new ccui.TextField();
+        textField = new ccui.TextField("30s");
         textField.setTouchEnabled(true);
         textField.fontName = "Arial";
         textField.placeHolder = "30s";
@@ -91,9 +92,17 @@ var MenuLayer = cc.Layer.extend({
     },
     onHighScore: function () {
         //cc.director.runScene(new HighScoresScene());
+        if(this.sentOnce){
+            return;
+        }
+        cc.log("fetching highscores..please wait.")
         this.httpRequest(res.fetchScores, this.fetchHighScores);
+        this.sentOnce = true;
     },
     fetchHighScores: function (response) {
+        cc.log("scores fetched.")
+        this.sentOnce = false;
+
         var jsonData = JSON.parse(response);
         var data = jsonData["data"];
 
