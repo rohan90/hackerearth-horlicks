@@ -28,7 +28,6 @@ var PlayScene = cc.Scene.extend({
     _gameTime: 30,
 
 
-
     ctor: function () {
         this._super();
     },
@@ -96,16 +95,20 @@ var PlayScene = cc.Scene.extend({
         //cc.log(this.statusLayer);
 
 
-            this.scheduleUpdate();
-            this.schedule(this.gameLogic, 0.5);
+        this.scheduleUpdate();
+        this.schedule(this.gameLogic, 1);
     },
     gameLogic: function (dt) {
         this.addCows()
     },
     handleTouch: function (touch, event) {
         this.addProjectile(touch.getLocation())
+        return true;
     },
+
     addProjectile: function (location) {
+        if (!this.gameStarted)
+            return;
         cc.log("Touched at " + location.x + "," + location.y);
         //if (!this.statusLayer.canFire()) {
         if (!this.canFire()) {
@@ -116,13 +119,13 @@ var PlayScene = cc.Scene.extend({
 
         var winSize = cc.winSize;
         // Set up initial location of the projectile
-        var projectile = new Projectile(res.s_projectile,1);
+        var projectile = new Projectile(res.s_projectile, 1);
         projectile.setPosition(300, 2);
 
         // Determine offset of location to projectile
         var offset = cc.pSub(location, projectile.getPosition()); // 1
 
-        this.addChild(projectile);
+        this.addChild(projectile.getSprite());
 
         // Figure out final destination of projectile
         var realX;
@@ -142,16 +145,21 @@ var PlayScene = cc.Scene.extend({
         var realMoveDuration = length / velocity;
 
         // Move projectile to actual endpoint
-        projectile.runAction(cc.Sequence.create( // 2
+        projectile.getSprite().runAction(cc.Sequence.create( // 2
             cc.MoveTo.create(realMoveDuration, realDest),
             cc.CallFunc.create(function (node) {
-                cc.arrayRemoveObject(this._projectiles, node);
-                node.removeFromParent();
+                cc.arrayRemoveObject(this._projectiles, projectile);
+                projectile.removeFromParent();
+                //var index = this._projectiles.indexOf(projectile);
+                //if (index > -1) {
+                //    cc.log("reached end.. removing projectile")
+                //    this._projectiles.splice(index, 1);
+                //}
             }, this)
         ));
 
         // Add to array
-        projectile.setTag(2);
+        projectile.getSprite().setTag(2);
         this._projectiles.push(projectile);
     },
     addCows: function () {
@@ -189,7 +197,7 @@ var PlayScene = cc.Scene.extend({
         } else {
             cow.setPosition(-cow.getContentSize().width / 2, actualY);
         }
-        this.addChild(cow); // 2
+        this.addChild(cow.getSprite()); // 2
 
         // Determine speed of the cow
         var minDuration = 2.0;
@@ -205,13 +213,21 @@ var PlayScene = cc.Scene.extend({
             actionMove = cc.MoveTo.create(actualDuration, cc.p(size.width + cow.getContentSize().width / 2, (Math.random() * rangeY) + minY)); // 3
         }
         var actionMoveDone = cc.CallFunc.create(function (node) { // 4
-            cc.arrayRemoveObject(this._cows, node); // 5
-            node.removeFromParent();
+
+
+            cc.arrayRemoveObject(this._cows, cow); // 5
+            cow.removeFromParent();
+            //var index = this._cows.indexOf(cow);
+            //if (index > -1) {
+            //    cc.log("reached end removing cow")
+            //    this._cows.splice(index, 1);
+            //}
+
         }, this);
-        cow.runAction(cc.Sequence.create(actionMove, actionMoveDone));
+        cow.getSprite().runAction(cc.Sequence.create(actionMove, actionMoveDone));
 
         // Add to array
-        cow.setTag(1);
+        cow.getSprite().setTag(1);
         this._cows.push(cow); // 6
 
     },
@@ -231,25 +247,41 @@ var PlayScene = cc.Scene.extend({
             var gameTime = this.getGameTime();
 
             cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s");
+            //this.removeAllChildren();
             this.addChild(new GameOverLayer(score, totalTime, gameTime));
             this.reset()
             cc.director.pause();
         }
 
+        //cc.log("projectiles size " + this._projectiles.length)
+        //cc.log("cows size " + this._cows.length)
+
         for (var i = 0; i < this._projectiles.length; i++) {
             var projectile = this._projectiles[i];
+            if (projectile.isRemoved())
+                continue;
             for (var j = 0; j < this._cows.length; j++) {
+
                 var cow = this._cows[j];
+
+                if (cow.isRemoved())
+                    continue;
+
                 var projectileRect = projectile.getBoundingBox();
                 var cowRect = cow.getBoundingBox();
+
                 if (cc.rectIntersectsRect(projectileRect, cowRect)) {
                     cc.log("collision!");
                     //this.statusLayer.addHit(1, cow.getPoints());
                     this.addHit(1, cow.getPoints());
+
                     cc.arrayRemoveObject(this._projectiles, projectile);
                     projectile.removeFromParent();
                     cc.arrayRemoveObject(this._cows, cow);
                     cow.removeFromParent();
+
+                    this._projectiles.splice(i, 1);
+                    this._cows.splice(i, 1);
                 }
             }
         }
@@ -369,10 +401,10 @@ var PlayScene = cc.Scene.extend({
             this.statusLayer = {},
             this.gameTime = 30,
             /*this.labelScore = null,
-            this.labelTime = null,
-            this.labelHits = null,
-            this.labelMiss = null,
-            this.labelAmmo = null,*/
+             this.labelTime = null,
+             this.labelHits = null,
+             this.labelMiss = null,
+             this.labelAmmo = null,*/
             this.score = 0,
             this.time = 0,
             this.hits = 0,

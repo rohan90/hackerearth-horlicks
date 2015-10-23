@@ -5,12 +5,15 @@
 var MenuLayer = cc.Layer.extend({
     textField: null,
     sentOnce:false,
+    defaultGameTime:10,
 
     ctor: function () {
         this._super();
     },
     init: function () {
         this._super();
+
+        this.defaultGameTime = g_defaultGameTime;
 
         var winsize = cc.director.getWinSize();
 
@@ -62,10 +65,9 @@ var MenuLayer = cc.Layer.extend({
         // add the label as a child to this layer
         this.addChild(milkChallengeLabel);*/
 
-        textField = new ccui.TextField("30s");
+        textField = new ccui.TextField(this.defaultGameTime+"s");
         textField.setTouchEnabled(true);
         textField.fontName = "Arial";
-        textField.placeHolder = "30s";
         textField.setTextColor(cc.color(0,0,0))
         textField.fontSize = 30;
         textField.x = centerpos0.x;
@@ -84,7 +86,7 @@ var MenuLayer = cc.Layer.extend({
             cc.log(parseInt(textField.string))
             cc.director.runScene(new PlayScene(parseInt(textField.string)));
         }else {
-            cc.director.runScene(new PlayScene(5));
+            cc.director.runScene(new PlayScene(this.defaultGameTime));
         }
     },
     onHelp: function () {
