@@ -2,55 +2,92 @@
  * Created by rohan on 20/10/15.
  */
 var Cow = cc.Class.extend({
-    sprite:null,
-    points:1,
-    width:0,
-    height:0,
-    removed:false,
+    sprite: null,
+    points: 1,
+    width: 0,
+    height: 0,
+    removed: false,
+    health: 1,
+    projectiles: [],
+    stampId: -1,
 
-    ctor:function(){
+    ctor: function () {
         // Custom initialization
     },
-    ctor:function(filename,points){
+    ctor: function (id, filename, points, size) {
         this.points = points;
+        this.stampId = id;
         // Custom initialization
         this.sprite = new cc.Sprite(filename)
+        this.sprite.attr({
+            scale: size,
+        })
+        if (size > 1)
+            this.health = size * points;
+        else this.health = size;
+        this.points = size * points;
+        if (points < 0)
+            this.health = 1; //for baby
+        if(this.health > 2.5) //TODO for ease of play, should be removed?
+            this.health = 2
+        this.size = size;
         this.sprite.retain()
         this.width = this.sprite.getContentSize().width;
         this.height = this.sprite.getContentSize().height;
+        this.projectiles=[]
     },
-    getPoints: function(){
+    getCowSize: function () {
+        return this.size
+    },
+    getStampId: function () {
+        return this.stampId;
+    },
+    getPoints: function () {
         return this.points;
     },
-    setPosition:function(x,y){
-        this.sprite.setPosition(x,y)
+    setPosition: function (x, y) {
+        this.sprite.setPosition(x, y)
     },
-    getPosition:function(){
+    getPosition: function () {
         return this.sprite.getPosition()
     },
-    getContentSize:function(){
+    getContentSize: function () {
         return this.sprite.getContentSize()
     },
-    getSprite:function(){
+    getSprite: function () {
         return this.sprite
     },
-    getBoundingBox:function(){
-        var _p = this.sprite.convertToWorldSpace(this.sprite.getPosition());
-        var w = this.width, h = this.height;
-        var x = this.sprite.getPosition().x, y =this.sprite.getPosition().y;
-        var rect = cc.rect(x, y, w, h);
-//        var rect = cc.Rect(cc.p(x, y), cc.p(w, h));
-        //rect.drawRect(cc.p(_p.x, _p.y), cc.p(w, h));
-        //rect.drawRect(cc.p(x, y), cc.p(w, h));
-        return rect;
+    getBoundingBox: function () {
+        //var w = this.width, h = this.height;
+        //var x = this.sprite.getPosition().x, y =this.sprite.getPosition().y;
+        //var rect = cc.rect(x, y, w, h);
+        //return rect;
+        return this.sprite.getBoundingBox();
     },
-    removeFromParent:function(){
+    removeFromParent: function () {
         this.sprite.removeFromParent()
         this.removed = true;
         this.sprite.release()
 
     },
-    isRemoved:function(){
+    isRemoved: function () {
         return this.removed;
+    },
+    isCowCaptured: function () {
+        if (this.health < 1) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    },
+    cowHit: function (hit, index) {
+        if (this.projectiles.indexOf(index) > -1) {
+            return false;
+        } else {
+            this.projectiles.push(index)
+            this.health -= hit;
+        }
+
     }
 });

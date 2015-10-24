@@ -27,6 +27,8 @@ var PlayScene = cc.Scene.extend({
     gameTime: 30,//default 30
     _gameTime: 30,
     spawnMultiplier: 1,
+    projectileCount: 0, //these two used as ids
+    cowCount: 0,
 
 
     ctor: function () {
@@ -121,7 +123,8 @@ var PlayScene = cc.Scene.extend({
 
         var winSize = cc.winSize;
         // Set up initial location of the projectile
-        var projectile = new Projectile(res.s_projectile, 1);
+        var id = this.projectileCount++;
+        var projectile = new Projectile(id, res.s_projectile, 1);
         projectile.setPosition(300, 2);
 
         // Determine offset of location to projectile
@@ -159,6 +162,9 @@ var PlayScene = cc.Scene.extend({
                 //}
             }, this)
         ));
+        var sprite_action_rotate = cc.RotateBy.create(0.1, 45);
+        var repeat_action_rotate = cc.RepeatForever.create(sprite_action_rotate);
+        projectile.getSprite().runAction(repeat_action_rotate);
 
         // Add to array
         projectile.getSprite().setTag(2);
@@ -170,22 +176,39 @@ var PlayScene = cc.Scene.extend({
 
         var num = Math.floor(Math.random() * 7) + 1
         var cow;
+        var id = this.cowCount++;
+        var scaleCow = 1;
+        var numScale = Math.floor(Math.random() * 9) + 1
+        if(numScale == 1){
+            var scaleTo=Math.floor(Math.random() *2) + 1
+            switch (scaleTo){
+                case 1:
+                    scaleCow+=0.5
+                    break;
+                case 2:
+                    scaleCow+=0.75
+                    break;
+                default:
+                    scaleCow+=1
+                    break;
+            }
+        }
         switch (num) {
             case 1:
                 2
-                cow = new Cow(res.cow5, -2);
+                cow = new Cow(id, res.cow5, -2, scaleCow);
                 break;
             case 3:
-                cow = new Cow(res.cow2, 1);
+                cow = new Cow(id, res.cow2, 1.25, scaleCow);
                 break;
             case 4:
-                cow = new Cow(res.cow3, 1.5);
+                cow = new Cow(id, res.cow3, 1.5, scaleCow);
                 break;
             case 5:
-                cow = new Cow(res.cow4, 4);
+                cow = new Cow(id, res.cow4, 5, scaleCow);
                 break;
             default:
-                cow = new Cow(res.cow1, 1);
+                cow = new Cow(id, res.cow1, 1, scaleCow);
                 break;
         }
 
@@ -202,8 +225,13 @@ var PlayScene = cc.Scene.extend({
         this.addChild(cow.getSprite()); // 2
 
         // Determine speed of the cow
+        //TODO configurable?
         var minDuration = 2.0;
         var maxDuration = 4.0;
+        if(cow.getCowSize() > 1){
+            minDuration = 2.0;
+            maxDuration = 6.0;
+        }
         var rangeDuration = maxDuration - minDuration;
         var actualDuration = (Math.random() % rangeDuration) + minDuration;
 
@@ -249,9 +277,9 @@ var PlayScene = cc.Scene.extend({
             var gameTime = this.getGameTime();
             var accuracy = this.accuracy;
 
-            cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s Accuracy "+this.accuracy);
+            cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s Accuracy " + this.accuracy);
             //this.removeAllChildren();
-            this.addChild(new GameOverLayer(score, totalTime, gameTime,accuracy));
+            this.addChild(new GameOverLayer(score, totalTime, gameTime, accuracy));
             this.reset()
             cc.director.pause();
         }
@@ -261,14 +289,18 @@ var PlayScene = cc.Scene.extend({
 
         for (var i = 0; i < this._projectiles.length; i++) {
             var projectile = this._projectiles[i];
-            if (projectile.isRemoved())
+            if (projectile.isRemoved() || !cc.sys.isObjectValid(projectile.getSprite())) {
+                cc.log("invalid projectile should be removed at " + i)
                 continue;
+            }
             for (var j = 0; j < this._cows.length; j++) {
 
                 var cow = this._cows[j];
 
-                if (cow.isRemoved())
+                if (cow.isRemoved() || !cc.sys.isObjectValid(cow.getSprite())) {
+                    cc.log("invalid cow should be removed at " + i)
                     continue;
+                }
 
                 var projectileRect = projectile.getBoundingBox();
                 var cowRect = cow.getBoundingBox();
@@ -276,15 +308,19 @@ var PlayScene = cc.Scene.extend({
                 if (cc.rectIntersectsRect(projectileRect, cowRect)) {
                     cc.log("collision!");
                     //this.statusLayer.addHit(1, cow.getPoints());
+                    cow.cowHit(projectile.getPoints(), projectile.getStampId());
                     this.addHit(1, cow.getPoints());
-
-                    cc.arrayRemoveObject(this._projectiles, projectile);
                     projectile.removeFromParent();
-                    cc.arrayRemoveObject(this._cows, cow);
-                    cow.removeFromParent();
-
+                    cc.arrayRemoveObject(this._projectiles, projectile);
                     this._projectiles.splice(i, 1);
-                    this._cows.splice(i, 1);
+
+                    if (cow.isCowCaptured()) {
+                        cc.log("removing cow at"+j)
+                        cow.removeFromParent();
+                        cc.arrayRemoveObject(this._cows, cow);
+                        this._cows.splice(j, 1);
+                        break;
+                    }
                 }
             }
         }
@@ -338,20 +374,20 @@ var PlayScene = cc.Scene.extend({
         if (parseInt(this.time) / 60 >= this.minuteCount && !this.isMinuteOver) {
             this.isMinuteOver = true;
             this.minuteCount++;
-            this.spawnMultiplier +=1;
-            this.ammo += 30*this.spawnMultiplier + 30*this.accuracy;
+            this.spawnMultiplier += 1;
+            this.ammo += 30 * this.spawnMultiplier + 30 * this.accuracy;
             this.ammo = parseInt(this.ammo)
         } else {
             this.isMinuteOver = false;
         }
 
         this.labelTime.setString("Time: " + parseInt(this.gameTime) + " s");
-        this.labelAmmo.setString("Horlicks: " + this.ammo);
+        this.labelAmmo.setString("Horlicks: " + parseFloat(this.ammo).toFixed(2));
 
         this.gameTime -= px;
         if (this.isTimeOver()) {
             cc.log("===gameover")
-            cc.log("spawn rate "+this.spawnMultiplier+" accuracy="+this.accuracy);
+            cc.log("spawn rate " + this.spawnMultiplier + " accuracy=" + this.accuracy);
         }
 
     },
@@ -364,7 +400,7 @@ var PlayScene = cc.Scene.extend({
         this.accuracy = this.hits / (this.fired)
         this.gameTime += this.accuracy * points;
 
-        this.labelScore.setString("Milk:" + this.score);
+        this.labelScore.setString("Milk:" + parseFloat(this.score).toFixed(2));
         this.labelHits.setString("Hits:" + this.hits);
         this.labelMiss.setString("Miss:" + parseInt(this.fired - this.hits));
     },
@@ -393,7 +429,7 @@ var PlayScene = cc.Scene.extend({
         return false;
     },
     getScore: function () {
-        return this.score;
+        return parseFloat(this.score).toFixed(2);
     },
     getTotalPlayTime: function () {
         return this.time;
@@ -422,7 +458,9 @@ var PlayScene = cc.Scene.extend({
             this.minuteCount = 1,
             this.gameTime = 30,//default 30
             this._gameTime = 30,
-            this.spawnMultiplier=1
+            this.spawnMultiplier = 1,
+            this.projectileCount = 0,
+            this.cowCount = 0;
     }
 
 });

@@ -7,18 +7,23 @@ var Projectile = cc.Class.extend({
     width:0,
     height:0,
     removed:false,
+    stampId:-1,
 
 
     ctor:function(){
         // Custom initialization
     },
-    ctor:function(filename,points){
+    ctor:function(id,filename,points){
         this.points = points;
+        this.stampId = id;
         // Custom initialization
         this.sprite = new cc.Sprite(filename)
         this.sprite.retain()
         this.width = this.sprite.getContentSize().width;
         this.height = this.sprite.getContentSize().height;
+    },
+    getStampId:function(){
+        return this.stampId;
     },
     getPoints: function(){
         return this.points;
@@ -36,14 +41,11 @@ var Projectile = cc.Class.extend({
         return this.sprite
     },
     getBoundingBox:function(){
-        //var _p = this.sprite.convertToWorldSpace(this.sprite.getPosition());
-        var w = this.width, h = this.height;
-        var x = this.sprite.getPosition().x, y =this.sprite.getPosition().y;
-        var rect = cc.rect(x, y, w, h);
-//        var rect = cc.Rect(cc.p(x, y), cc.p(w, h));
-        //rect.drawRect(cc.p(_p.x, _p.y), cc.p(w, h));
-        //rect.drawRect(cc.p(x, y), cc.p(w, h));
-        return rect;
+        //var w = this.width, h = this.height;
+        //var x = this.sprite.getPosition().x, y =this.sprite.getPosition().y;
+        //var rect = cc.rect(x, y, w, h);
+        //return rect;
+        return this.sprite.getBoundingBox();
     },
     removeFromParent:function(){
         this.sprite.removeFromParent()
