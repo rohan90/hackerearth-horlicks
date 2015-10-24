@@ -1,9 +1,6 @@
 /**
  * Created by rohan on 21/10/15.
  */
-/**
- * Created by rohan on 20/10/15.
- */
 var HelpLayer = cc.Layer.extend({
 
     ctor: function () {
@@ -16,9 +13,14 @@ var HelpLayer = cc.Layer.extend({
             this.createBackButtonListener();
 
 
+        var centerposBG = cc.p(winsize.width / 2, winsize.height / 2 - 100);
+        var spritebg = new cc.Sprite(res.help_bg);
+        spritebg.setPosition(centerposBG);
+        this.addChild(spritebg);
+
         var backButton = new ccui.Button();
         backButton.setTouchEnabled(true);
-        backButton.setPosition(cc.p(winsize.width -100,100))
+        backButton.setPosition(cc.p(winsize.width -50,20))
         backButton.loadTextureNormal(res.back_big)
         backButton.addTouchEventListener(this.backButtonPressed,this)
         this.addChild(backButton);

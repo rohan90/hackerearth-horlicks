@@ -5,6 +5,7 @@ var res = {
     fetchScores: "https://frozen-reaches-9921.herokuapp.com/api/scores",
 
     hello_bg : "res/hello_bg2.png",
+    help_bg : "res/help_instructions.png",
     start_n : "res/start.png",
     start_s : "res/start.png",
     help_s : "res/help.png",
@@ -24,6 +25,7 @@ var res = {
 var g_resources = [
     //image
     res.hello_bg,
+    res.help_bg,
     res.start_n,
     res.start_s,
     res.help_s,

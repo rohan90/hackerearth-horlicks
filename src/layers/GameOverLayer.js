@@ -6,16 +6,20 @@ var GameOverLayer = cc.LayerColor.extend({
     score: 0,
     gameTime: 0,
     totalTime: 0,
+    accuracy: 0,
     textField: null,
-    sentOnce:false,
+    sentOnce: false,
 
 
     // constructor
-    ctor: function (score, totaltime, gameTime) {
+    ctor: function (score, totaltime, gameTime, accuracy) {
         this._super();
+        cc.associateWithNative(this, cc.LayerColor);
         this.score = parseInt(score);
         this.totalTime = parseInt(totaltime);
         this.gameTime = parseInt(gameTime);
+        if (accuracy)
+            this.accuracy = parseFloat(accuracy * 100).toFixed(2);
 
         this.init();
     },
@@ -24,8 +28,8 @@ var GameOverLayer = cc.LayerColor.extend({
         var winSize = cc.director.getWinSize();
 
         var centerPos0 = cc.p(winSize.width / 2, winSize.height / 2 + 20);
-        var centerPos = cc.p(winSize.width / 2, winSize.height / 2 - 50);
-        var centerPos2 = cc.p(winSize.width / 2, winSize.height / 2 - 150);
+        var centerPos = cc.p(winSize.width / 2, winSize.height / 2 - 100);
+        var centerPos2 = cc.p(winSize.width - 100, 50);
         cc.MenuItemFont.setFontSize(30);
 
         var menuItemRestart = new cc.MenuItemSprite(
@@ -45,17 +49,18 @@ var GameOverLayer = cc.LayerColor.extend({
         this.addChild(menuPostScore);
 
 
-        var scoreLabbel = new cc.LabelTTF("Milk: " + this.score + " litres in " + this.totalTime + "s\nTime Challenge:" + this.gameTime + "s", "Arial", 38);
+        var scoreLabbel = new cc.LabelTTF("Milk: " + this.score + " litres in "
+            + this.totalTime + "s\nTime Challenge: " + this.gameTime + "s, Aim: " + this.accuracy + "%"
+            , "Arial", 38);
         // position the label on the center of the screen
         scoreLabbel.x = winSize.width / 2;
         scoreLabbel.y = winSize.height - 100;
         // add the label as a child to this layer
         this.addChild(scoreLabbel, 5);
 
-        textField = new ccui.TextField("Your name or a cheeky comment");
+        textField = new ccui.TextField("Your name or a cheeky comment \nbefore posting..");
         textField.setTouchEnabled(true);
         textField.fontName = "Arial";
-        textField.placeHolder = "Your name or a cheeky comment";
         textField.fontSize = 30;
         textField.x = centerPos0.x;
         textField.y = centerPos0.y;
@@ -84,12 +89,13 @@ var GameOverLayer = cc.LayerColor.extend({
         cc.director.runScene(new MenuScene());
     },
     onPostScore: function () {
-        if(this.sentOnce)
+        if (this.sentOnce)
             return;
         var scoreObj = {};
         scoreObj.score = this.score;
         scoreObj.timeChallenge = this.gameTime;
         scoreObj.timePlayed = this.totalTime;
+        scoreObj.accuracy = this.accuracy;
         if (textField.string)
             scoreObj.comment = textField.string;
         else scoreObj.comment = "Random guest.";
@@ -97,7 +103,7 @@ var GameOverLayer = cc.LayerColor.extend({
 
         this.httpRequest(res.saveScore, JSON.stringify(scoreObj), this.scoreSaved);
         cc.log("sending score..pleasse wait.")
-        this.sentOnce=true;
+        this.sentOnce = true;
     },
     createBackButtonListener: function () {
         var self = this;

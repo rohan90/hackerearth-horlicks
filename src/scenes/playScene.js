@@ -26,6 +26,7 @@ var PlayScene = cc.Scene.extend({
     minuteCount: 1,
     gameTime: 30,//default 30
     _gameTime: 30,
+    spawnMultiplier: 1,
 
 
     ctor: function () {
@@ -96,10 +97,11 @@ var PlayScene = cc.Scene.extend({
 
 
         this.scheduleUpdate();
-        this.schedule(this.gameLogic, 1);
+        this.schedule(this.gameLogic, g_defaultSpawnTime);
     },
     gameLogic: function (dt) {
-        this.addCows()
+        for (var i = 0; i < this.spawnMultiplier; i++)
+            this.addCows()
     },
     handleTouch: function (touch, event) {
         this.addProjectile(touch.getLocation())
@@ -141,7 +143,7 @@ var PlayScene = cc.Scene.extend({
         // Determine the length of how far you're shooting
         var offset = cc.pSub(realDest, projectile.getPosition());
         var length = cc.pLength(offset);
-        var velocity = 480.0;
+        var velocity = 480.0; //TODO extract out
         var realMoveDuration = length / velocity;
 
         // Move projectile to actual endpoint
@@ -245,10 +247,11 @@ var PlayScene = cc.Scene.extend({
             var score = this.getScore();
             var totalTime = parseInt(this.getTotalPlayTime());
             var gameTime = this.getGameTime();
+            var accuracy = this.accuracy;
 
-            cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s");
+            cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s Accuracy "+this.accuracy);
             //this.removeAllChildren();
-            this.addChild(new GameOverLayer(score, totalTime, gameTime));
+            this.addChild(new GameOverLayer(score, totalTime, gameTime,accuracy));
             this.reset()
             cc.director.pause();
         }
@@ -335,7 +338,9 @@ var PlayScene = cc.Scene.extend({
         if (parseInt(this.time) / 60 >= this.minuteCount && !this.isMinuteOver) {
             this.isMinuteOver = true;
             this.minuteCount++;
-            this.ammo += 30;
+            this.spawnMultiplier +=1;
+            this.ammo += 30*this.spawnMultiplier + 30*this.accuracy;
+            this.ammo = parseInt(this.ammo)
         } else {
             this.isMinuteOver = false;
         }
@@ -346,6 +351,7 @@ var PlayScene = cc.Scene.extend({
         this.gameTime -= px;
         if (this.isTimeOver()) {
             cc.log("===gameover")
+            cc.log("spawn rate "+this.spawnMultiplier+" accuracy="+this.accuracy);
         }
 
     },
@@ -355,7 +361,8 @@ var PlayScene = cc.Scene.extend({
         this.score += points;
 
         //TODO modify this formulae
-        this.gameTime += this.hits / (this.fired - this.hits) * points;
+        this.accuracy = this.hits / (this.fired)
+        this.gameTime += this.accuracy * points;
 
         this.labelScore.setString("Milk:" + this.score);
         this.labelHits.setString("Hits:" + this.hits);
@@ -414,7 +421,8 @@ var PlayScene = cc.Scene.extend({
             this.isMinuteOver = false,
             this.minuteCount = 1,
             this.gameTime = 30,//default 30
-            this._gameTime = 30
+            this._gameTime = 30,
+            this.spawnMultiplier=1
     }
 
 });

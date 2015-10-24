@@ -5,15 +5,13 @@
 var MenuLayer = cc.Layer.extend({
     textField: null,
     sentOnce:false,
-    defaultGameTime:10,
+    defaultGameTime:g_defaultGameTime,
 
     ctor: function () {
         this._super();
     },
     init: function () {
         this._super();
-
-        this.defaultGameTime = g_defaultGameTime;
 
         var winsize = cc.director.getWinSize();
 
@@ -22,8 +20,9 @@ var MenuLayer = cc.Layer.extend({
         var centerpos2 = cc.p(winsize.width / 2, winsize.height / 2);
         var centerpos3 = cc.p(winsize.width / 2, winsize.height / 2 - 100);
 
+        var centerposBG = cc.p(winsize.width / 2, winsize.height / 2 + 100);
         var spritebg = new cc.Sprite(res.hello_bg);
-        spritebg.setPosition(centerpos);
+        spritebg.setPosition(centerposBG);
         this.addChild(spritebg);
 
         cc.MenuItemFont.setFontSize(60);

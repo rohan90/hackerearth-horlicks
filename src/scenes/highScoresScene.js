@@ -31,7 +31,7 @@ var HighScoreLayer = cc.Layer.extend({
         this.addChild(listView);
         for (var i = 0; i < data.length; i++) {
             var text = "Rank " + (i + 1) + " : " + data[i].score + " litres in " + data[i].timeChallenge
-                        + "s, played for " + data[i].timePlayed + "s \n         [" + data[i].comment + "]";
+                        + "s, aim "+data[i].accuracy+"%, played for " + data[i].timePlayed + "s \n         [" + data[i].comment + "]";
             var score = new ccui.Text(text,"Arial","25");
             score.setColor(cc.color(0,0,0))
             score.setTouchEnabled(false);
@@ -41,7 +41,7 @@ var HighScoreLayer = cc.Layer.extend({
 
         var backButton = new ccui.Button();
         backButton.setTouchEnabled(true);
-        backButton.setPosition(cc.p(winsize.width -100,100))
+        backButton.setPosition(cc.p(winsize.width -50,50))
         backButton.loadTextureNormal(res.back_big)
         backButton.addTouchEventListener(this.backButtonPressed,this)
         this.addChild(backButton);

@@ -3,4 +3,5 @@
  */
 var g_groundHeight = 57;
 var g_cowStartY = 80;
-var g_defaultGameTime = 10;
+var g_defaultGameTime = 7;
+var g_defaultSpawnTime = 0.5;
