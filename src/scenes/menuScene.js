@@ -96,12 +96,12 @@ var MenuLayer = cc.Layer.extend({
         if(this.sentOnce){
             return;
         }
-        cc.log("fetching highscores..please wait.")
+        cc.log("fetching highscores..please wait....")
         this.httpRequest(res.fetchScores, this.fetchHighScores);
         this.sentOnce = true;
     },
     fetchHighScores: function (response) {
-        cc.log("scores fetched.")
+        cc.log("scores fetched!")
         this.sentOnce = false;
 
         var jsonData = JSON.parse(response);

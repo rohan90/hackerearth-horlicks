@@ -18,6 +18,7 @@
         "src/scenes/playScene.js",
         "src/scenes/highScoresScene.js",
         "src/scenes/helpScene.js",
+        "src/scenes/analysisScene.js",
         "src/layers/AnimationLayer.js",
         "src/layers/BackgroundLayer.js",
         "src/layers/StatusLayer.js",

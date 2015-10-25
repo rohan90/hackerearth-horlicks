@@ -15,11 +15,18 @@ var res = {
     s_projectile:"res/horlicks_bottle.png",
     back_big: "res/back_big.png",
     back_small: "res/back_small.png",
+    analyse_small: "res/analyse.png",
     cow1 : "res/cow_1.png",
     cow2 : "res/cow_2.png",
     cow3 : "res/cow_3.png",
     cow4 : "res/cow_4.png",
-    cow5 : "res/cow_5.png"
+    cow5 : "res/cow_5.png",
+    con1 : "res/cow_1_con.png",
+    con2 : "res/cow_2_con.png",
+    con3 : "res/cow_3_con.png",
+    con4 : "res/cow_4_con.png",
+    con5 : "res/cow_5_con.png",
+
 };
 
 var g_resources = [
@@ -35,11 +42,18 @@ var g_resources = [
     res.s_projectile,
     res.back_big,
     res.back_small,
+    res.analyse_small,
     res.cow1,
     res.cow2,
     res.cow3,
     res.cow4,
-    res.cow5
+    res.cow5,
+    res.con1,
+    res.con2,
+    res.con3,
+    res.con4,
+    res.con5,
+
 ];
 for (var i in res) {
     g_resources.push(res[i]);

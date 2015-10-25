@@ -29,9 +29,11 @@ var PlayScene = cc.Scene.extend({
     spawnMultiplier: 1,
     projectileCount: 0, //these two used as ids
     cowCount: 0,
+    cowTally:{normal:0,blue:0,yellow:0,red:0,baby:0,horlicks:0},
 
 
-    ctor: function () {
+
+ctor: function () {
         this._super();
     },
     ctor: function (num) {
@@ -42,6 +44,7 @@ var PlayScene = cc.Scene.extend({
         cc.log("" + num);
         this.gameStarted = true;
         cc.log(this.gameTime)
+
     },
     init: function () {
         //add three layer in the right order
@@ -196,20 +199,21 @@ var PlayScene = cc.Scene.extend({
         switch (num) {
             case 1:
                 2
-                cow = new Cow(id, res.cow5, -2, scaleCow);
+                cow = new Cow(id, g_CowTypes.BABY,res.cow5, -2, scaleCow);
                 break;
             case 3:
-                cow = new Cow(id, res.cow2, 1.25, scaleCow);
+                cow = new Cow(id, g_CowTypes.BLUE,res.cow2, 1.25, scaleCow);
                 break;
             case 4:
-                cow = new Cow(id, res.cow3, 1.5, scaleCow);
+                cow = new Cow(id, g_CowTypes.YELLOW,res.cow3, 1.5, scaleCow);
                 break;
             case 5:
-                cow = new Cow(id, res.cow4, 5, scaleCow);
+                cow = new Cow(id, g_CowTypes.RED,res.cow4, 5, scaleCow);
                 break;
             default:
-                cow = new Cow(id, res.cow1, 1, scaleCow);
+                cow = new Cow(id, g_CowTypes.NORMAL,res.cow1, 1, scaleCow);
                 break;
+            //TODO add horlicks type
         }
 
         var minY = cow.getContentSize().height / 2;
@@ -276,10 +280,10 @@ var PlayScene = cc.Scene.extend({
             var totalTime = parseInt(this.getTotalPlayTime());
             var gameTime = this.getGameTime();
             var accuracy = this.accuracy;
+            var cowTally = this.cowTally;
 
             cc.log("Milk: " + score + "litres in " + totalTime + "s\nMilk Challenge:" + gameTime + "s Accuracy " + this.accuracy);
-            //this.removeAllChildren();
-            this.addChild(new GameOverLayer(score, totalTime, gameTime, accuracy));
+            this.addChild(new GameOverLayer(score, totalTime, gameTime, accuracy, cowTally));
             this.reset()
             cc.director.pause();
         }
@@ -315,7 +319,7 @@ var PlayScene = cc.Scene.extend({
                     this._projectiles.splice(i, 1);
 
                     if (cow.isCowCaptured()) {
-                        cc.log("removing cow at"+j)
+                        this.updateCowTally(cow.getCowType())
                         cow.removeFromParent();
                         cc.arrayRemoveObject(this._cows, cow);
                         this._cows.splice(j, 1);
@@ -324,6 +328,29 @@ var PlayScene = cc.Scene.extend({
                 }
             }
         }
+    },
+    updateCowTally:function(type){
+        switch (type){
+            case g_CowTypes.NORMAL:
+                this.cowTally.normal+=1;
+                break;
+            case g_CowTypes.BLUE:
+                this.cowTally.blue+=1;
+                break;
+            case g_CowTypes.YELLOW:
+                this.cowTally.yellow+=1;
+                break;
+            case g_CowTypes.RED:
+                this.cowTally.red+=1;
+                break;
+            case g_CowTypes.BABY:
+                this.cowTally.baby+=1;
+                break;
+            case g_CowTypes.HORLICKS:
+                this.cowTally.horlicks+=1;
+                break;
+        }
+
     },
     createBackButtonListener: function () {
         var self = this;
@@ -456,11 +483,18 @@ var PlayScene = cc.Scene.extend({
             this.fired = 1,//needed
             this.isMinuteOver = false,
             this.minuteCount = 1,
-            this.gameTime = 30,//default 30
-            this._gameTime = 30,
+            this.gameTime = g_defaultGameTime,//default 30
+            this._gameTime = g_defaultGameTime,
             this.spawnMultiplier = 1,
             this.projectileCount = 0,
             this.cowCount = 0;
+
+            this.cowTally.baby=0
+            this.cowTally.blue=0
+            this.cowTally.yellow=0
+            this.cowTally.red=0
+            this.cowTally.normal=0
+            this.cowTally.horlicks=0
     }
 
 });

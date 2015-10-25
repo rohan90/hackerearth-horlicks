@@ -10,13 +10,16 @@ var Cow = cc.Class.extend({
     health: 1,
     projectiles: [],
     stampId: -1,
+    cowType:null,
 
     ctor: function () {
         // Custom initialization
     },
-    ctor: function (id, filename, points, size) {
+    ctor: function (id, cowType,filename, points, size) {
         this.points = points;
         this.stampId = id;
+        this.size = size;
+        this.cowType = cowType;
         // Custom initialization
         this.sprite = new cc.Sprite(filename)
         this.sprite.attr({
@@ -26,15 +29,18 @@ var Cow = cc.Class.extend({
             this.health = size * points;
         else this.health = size;
         this.points = size * points;
-        if (points < 0)
+        //if(points <0)
+        if (cowType == g_CowTypes.BABY)
             this.health = 1; //for baby
         if(this.health > 2.5) //TODO for ease of play, should be removed?
             this.health = 2
-        this.size = size;
         this.sprite.retain()
         this.width = this.sprite.getContentSize().width;
         this.height = this.sprite.getContentSize().height;
         this.projectiles=[]
+    },
+    getCowType:function(){
+        return this.cowType;
     },
     getCowSize: function () {
         return this.size

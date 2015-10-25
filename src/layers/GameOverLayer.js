@@ -7,12 +7,17 @@ var GameOverLayer = cc.LayerColor.extend({
     gameTime: 0,
     totalTime: 0,
     accuracy: 0,
-    textField: null,
     sentOnce: false,
+    cowTally: null,
+    textField: null,
+    menuRestart: null,
+    menuPostScore: null,
+    menuAnalysis: null,
+    scoreLabbel: null,
 
 
     // constructor
-    ctor: function (score, totaltime, gameTime, accuracy) {
+    ctor: function (score, totaltime, gameTime, accuracy, cowTally) {
         this._super();
         cc.associateWithNative(this, cc.LayerColor);
         this.score = parseInt(score);
@@ -20,7 +25,7 @@ var GameOverLayer = cc.LayerColor.extend({
         this.gameTime = parseInt(gameTime);
         if (accuracy)
             this.accuracy = parseFloat(accuracy * 100).toFixed(2);
-
+        this.cowTally = JSON.parse(JSON.stringify(cowTally));
         this.init();
     },
     init: function () {
@@ -28,51 +33,82 @@ var GameOverLayer = cc.LayerColor.extend({
         var winSize = cc.director.getWinSize();
 
         var centerPos0 = cc.p(winSize.width / 2, winSize.height / 2 + 20);
-        var centerPos = cc.p(winSize.width / 2, winSize.height / 2 - 100);
-        var centerPos2 = cc.p(winSize.width - 100, 50);
+        var centerPos1l = cc.p(winSize.width / 2 - 120, winSize.height / 2 - 100);
+        var centerPos1r = cc.p(winSize.width / 2 + 100, winSize.height / 2 - 100);
+        var centerPos2 = cc.p(winSize.width - 100, 40);
         cc.MenuItemFont.setFontSize(30);
 
         var menuItemRestart = new cc.MenuItemSprite(
             new cc.Sprite(res.gameover_s),
             new cc.Sprite(res.gameover_s),
             this.onRestart, this);
-        var menu = new cc.Menu(menuItemRestart);
-        menu.setPosition(centerPos2);
-        this.addChild(menu);
+        this.menuRestart = new cc.Menu(menuItemRestart);
+        this.menuRestart.setPosition(centerPos2);
+        this.addChild(this.menuRestart);
 
         var menuItemPostScore = new cc.MenuItemSprite(
             new cc.Sprite(res.post_score_s),
             new cc.Sprite(res.post_score_s),
             this.onPostScore, this);
-        var menuPostScore = new cc.Menu(menuItemPostScore);
-        menuPostScore.setPosition(centerPos);
-        this.addChild(menuPostScore);
+        this.menuPostScore = new cc.Menu(menuItemPostScore);
+        this.menuPostScore.setPosition(centerPos1r);
+        this.addChild(this.menuPostScore);
+
+        var menuItemAnalysis = new cc.MenuItemSprite(
+            new cc.Sprite(res.analyse_small),
+            new cc.Sprite(res.analyse_small),
+            this.onAnalyze, this);
+        this.menuAnalysis = new cc.Menu(menuItemAnalysis);
+        this.menuAnalysis.setPosition(centerPos1l);
+        this.addChild(this.menuAnalysis);
 
 
-        var scoreLabbel = new cc.LabelTTF("Milk: " + this.score + " litres in "
+        this.scoreLabbel = new cc.LabelTTF("Milk: " + this.score + " litres in "
             + this.totalTime + "s\nTime Challenge: " + this.gameTime + "s, Aim: " + this.accuracy + "%"
             , "Arial", 38);
         // position the label on the center of the screen
-        scoreLabbel.x = winSize.width / 2;
-        scoreLabbel.y = winSize.height - 100;
+        this.scoreLabbel.x = winSize.width / 2;
+        this.scoreLabbel.y = winSize.height - 100;
         // add the label as a child to this layer
-        this.addChild(scoreLabbel, 5);
+        this.addChild(this.scoreLabbel);
 
-        textField = new ccui.TextField("Your name or a cheeky comment \nbefore posting..");
-        textField.setTouchEnabled(true);
-        textField.fontName = "Arial";
-        textField.fontSize = 30;
-        textField.x = centerPos0.x;
-        textField.y = centerPos0.y;
-        textField.setMaxLengthEnabled(true);
-        textField.setMaxLength(50);
-        textField.addEventListener(this.textFieldEvent, this);
-        this.addChild(textField);
+        this.textField = new ccui.TextField("Your name or a cheeky comment \nbefore posting..");
+        this.textField.setTouchEnabled(true);
+        this.textField.fontName = "Arial";
+        this.textField.fontSize = 30;
+        this.textField.x = centerPos0.x;
+        this.textField.y = centerPos0.y;
+        this.textField.setMaxLengthEnabled(true);
+        this.textField.setMaxLength(50);
+        this.textField.addEventListener(this.textFieldEvent, this);
+        this.addChild(this.textField);
 
         if (cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID)
             this.createBackButtonListener();
     },
     textFieldEvent: function (sender, type) {
+    },
+    onAnalyze: function () {
+        //cc.director.pushScene(new AnalysisScene(this.score, this.totalTime,this.gameTime, this.accuracy, this.cowTally));
+
+        var analysisLayer = new AnalysisLayer(this.score, this.totalTime, this.gameTime, this.accuracy, this.cowTally)
+        analysisLayer.setTag(88)
+        this.hideMyself()
+        this.addChild(analysisLayer, 5)
+    },
+    hideMyself: function () {
+        this.scoreLabbel.setVisible(false)
+        this.textField.setVisible(false)
+        this.menuAnalysis.setVisible(false)
+        this.menuPostScore.setVisible(false)
+        this.menuRestart.setVisible(false)
+    },
+    showHighScoreLayer: function () {
+        this.scoreLabbel.setVisible(true)
+        this.textField.setVisible(true)
+        this.menuAnalysis.setVisible(true)
+        this.menuPostScore.setVisible(true)
+        this.menuRestart.setVisible(true)
     },
     onRestart: function (sender) {
         //cc.sys.cleanScript("src/scenes/playScene.js");
@@ -99,10 +135,10 @@ var GameOverLayer = cc.LayerColor.extend({
         if (textField.string)
             scoreObj.comment = textField.string;
         else scoreObj.comment = "Random guest.";
+        scoreObj.tally = this.cowTally;
 
-
+        cc.log("sending score.."+JSON.stringify(scoreObj));
         this.httpRequest(res.saveScore, JSON.stringify(scoreObj), this.scoreSaved);
-        cc.log("sending score..pleasse wait.")
         this.sentOnce = true;
     },
     createBackButtonListener: function () {
