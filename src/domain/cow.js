@@ -32,6 +32,8 @@ var Cow = cc.Class.extend({
         //if(points <0)
         if (cowType == g_CowTypes.BABY)
             this.health = 1; //for baby
+        else if(cowType == g_CowTypes.HORLICKS)
+            this.health =1;
         if(this.health > 2.5) //TODO for ease of play, should be removed?
             this.health = 2
         this.sprite.retain()
@@ -94,6 +96,15 @@ var Cow = cc.Class.extend({
             this.projectiles.push(index)
             this.health -= hit;
         }
+
+    },
+    cowHitByTouch: function (hit, index) {
+        //if (this.projectiles.indexOf(index) > -1) {
+        //    return false;
+        //} else {
+        //    this.projectiles.push(index)
+            this.health -= hit;
+        //}
 
     }
 });

@@ -26,6 +26,7 @@ var res = {
     con3 : "res/cow_3_con.png",
     con4 : "res/cow_4_con.png",
     con5 : "res/cow_5_con.png",
+    horlicks_mode_on : "res/horlicks_mode_on.png",
 
 };
 
@@ -53,6 +54,7 @@ var g_resources = [
     res.con3,
     res.con4,
     res.con5,
+    res.horlicks_mode_on,
 
 ];
 for (var i in res) {

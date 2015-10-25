@@ -5,6 +5,7 @@
 var PlayScene = cc.Scene.extend({
     _cows: [],
     _projectiles: [],
+    _touches: [],
     statusLayer: {},
     gameTime: 30,
     gameStarted: false,//default
@@ -29,11 +30,13 @@ var PlayScene = cc.Scene.extend({
     spawnMultiplier: 1,
     projectileCount: 0, //these two used as ids
     cowCount: 0,
-    cowTally:{normal:0,blue:0,yellow:0,red:0,baby:0,horlicks:0},
+    cowTally: {normal: 0, blue: 0, yellow: 0, red: 0, baby: 0, horlicks: 0},
+    horlicksEnabled: false,
+    horlicksTime: 5,
+    horlicksModeIndicator: null,
 
 
-
-ctor: function () {
+    ctor: function () {
         this._super();
     },
     ctor: function (num) {
@@ -70,6 +73,11 @@ ctor: function () {
         playa.runAction(new cc.Sequence(actionTo));
         this.addChild(playa);
 
+        this.horlicksModeIndicator = new cc.Sprite(res.horlicks_mode_on);
+        this.horlicksModeIndicator.attr({x: winsize.width / 2, y: winsize.height / 2});
+        this.horlicksModeIndicator.setVisible(false);
+        this.addChild(this.horlicksModeIndicator)
+
     },
     onEnter: function () {
         this._super();
@@ -101,18 +109,50 @@ ctor: function () {
         //cc.log(this.statusLayer);
 
 
+        this.horlicksButton = new ccui.Button();
+        this.horlicksButton.setTouchEnabled(true);
+        this.horlicksButton.setPosition(cc.p(winsize.width - 50, 40))
+        this.horlicksButton.loadTextureNormal(res.s_projectile)
+        this.horlicksButton.setScale(2)
+        this.horlicksButton.addTouchEventListener(this.horlicksMode, this)
+        this.horlicksButton.setVisible(false)
+        this.addChild(this.horlicksButton);
+
         this.scheduleUpdate();
         this.schedule(this.gameLogic, g_defaultSpawnTime);
+    },
+    showHorlicksButton: function () {
+        this.horlicksButton.setVisible(true)
+    },
+    horlicksMode: function () {
+        this.horlicksEnabled = true;
+        this.horlicksTime = 10;
+        this.horlicksButton.setVisible(false)
+        this.horlicksModeIndicator.setVisible(true)
+    },
+    disableHorlicksMode: function () {
+        this.horlicksEnabled = false;
+        this.horlicksTime = 0;
+        this.horlicksButton.setVisible(false)
+        this.horlicksModeIndicator.setVisible(false)
     },
     gameLogic: function (dt) {
         for (var i = 0; i < this.spawnMultiplier; i++)
             this.addCows()
     },
     handleTouch: function (touch, event) {
-        this.addProjectile(touch.getLocation())
+        if (this.horlicksEnabled) {
+            this.addTouchPoint(touch.getLocation());
+        } else
+            this.addProjectile(touch.getLocation())
+
         return true;
     },
-
+    addTouchPoint: function (location) {
+        cc.log("finger at " + location.x + "," + location.y);
+        var point = new cc.p(location.x, location.y);
+        this._touches.push(point);
+    },
     addProjectile: function (location) {
         if (!this.gameStarted)
             return;
@@ -177,43 +217,50 @@ ctor: function () {
 
         var size = cc.winSize;
 
-        var num = Math.floor(Math.random() * 7) + 1
+        var num = Math.floor(Math.random() * 12) + 1
         var cow;
         var id = this.cowCount++;
         var scaleCow = 1;
-        var numScale = Math.floor(Math.random() * 9) + 1
-        if(numScale == 1){
-            var scaleTo=Math.floor(Math.random() *2) + 1
-            switch (scaleTo){
+        var numScale = Math.floor(Math.random() * 8) + 1
+        if (numScale == 1) {
+            var scaleTo = Math.floor(Math.random() * 2) + 1
+            switch (scaleTo) {
                 case 1:
-                    scaleCow+=0.5
+                    scaleCow += 0.5
                     break;
                 case 2:
-                    scaleCow+=0.75
+                    scaleCow += 0.75
                     break;
                 default:
-                    scaleCow+=1
+                    scaleCow += 1
                     break;
             }
         }
         switch (num) {
             case 1:
                 2
-                cow = new Cow(id, g_CowTypes.BABY,res.cow5, -2, scaleCow);
+                cow = new Cow(id, g_CowTypes.BABY, res.cow5, -2, scaleCow);
                 break;
             case 3:
-                cow = new Cow(id, g_CowTypes.BLUE,res.cow2, 1.25, scaleCow);
+            case 4:
+            case 5:
+                cow = new Cow(id, g_CowTypes.BLUE, res.cow2, 1.25, scaleCow);
                 break;
             case 4:
-                cow = new Cow(id, g_CowTypes.YELLOW,res.cow3, 1.5, scaleCow);
-                break;
             case 5:
-                cow = new Cow(id, g_CowTypes.RED,res.cow4, 5, scaleCow);
+            case 6:
+                cow = new Cow(id, g_CowTypes.YELLOW, res.cow3, 1.5, scaleCow);
+                break;
+            case 7:
+            case 8:
+                cow = new Cow(id, g_CowTypes.RED, res.cow4, 5, scaleCow);
+                break;
+            case 9:
+                cow = new Cow(id, g_CowTypes.HORLICKS, res.s_projectile, 1, 1.5);
                 break;
             default:
-                cow = new Cow(id, g_CowTypes.NORMAL,res.cow1, 1, scaleCow);
+                cow = new Cow(id, g_CowTypes.NORMAL, res.cow1, 1, scaleCow);
                 break;
-            //TODO add horlicks type
         }
 
         var minY = cow.getContentSize().height / 2;
@@ -232,7 +279,7 @@ ctor: function () {
         //TODO configurable?
         var minDuration = 2.0;
         var maxDuration = 4.0;
-        if(cow.getCowSize() > 1){
+        if (cow.getCowSize() > 1) {
             minDuration = 2.0;
             maxDuration = 6.0;
         }
@@ -247,15 +294,8 @@ ctor: function () {
             actionMove = cc.MoveTo.create(actualDuration, cc.p(size.width + cow.getContentSize().width / 2, (Math.random() * rangeY) + minY)); // 3
         }
         var actionMoveDone = cc.CallFunc.create(function (node) { // 4
-
-
             cc.arrayRemoveObject(this._cows, cow); // 5
             cow.removeFromParent();
-            //var index = this._cows.indexOf(cow);
-            //if (index > -1) {
-            //    cc.log("reached end removing cow")
-            //    this._cows.splice(index, 1);
-            //}
 
         }, this);
         cow.getSprite().runAction(cc.Sequence.create(actionMove, actionMoveDone));
@@ -291,6 +331,43 @@ ctor: function () {
         //cc.log("projectiles size " + this._projectiles.length)
         //cc.log("cows size " + this._cows.length)
 
+        if (this.horlicksEnabled) {
+
+            for (var i = 0; i < this._touches.length; i++) {
+                var point = this._touches[i]
+                for (var j = 0; j < this._cows.length; j++) {
+
+                    var cow = this._cows[j];
+
+                    if (cow.isRemoved() || !cc.sys.isObjectValid(cow.getSprite())) {
+                        cc.log("invalid cow should be removed at " + i)
+                        continue;
+                    }
+
+                    var cowRect = cow.getBoundingBox();
+
+                    if (cc.rectContainsPoint(cowRect,point)) {
+                        cc.log("collision by touch!");
+                        //this.statusLayer.addHit(1, cow.getPoints());
+                        cow.cowHitByTouch(1, 1);
+                        this.addHit(0, cow.getPoints());
+                        cc.arrayRemoveObject(this._touches, point);
+                        this._touches.splice(i, 1);
+
+                        if (cow.isCowCaptured()) {
+                            this.updateCowTally(cow.getCowType())
+                            cow.removeFromParent();
+                            cc.arrayRemoveObject(this._cows, cow);
+                            this._cows.splice(j, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+
+
+            return;
+        }
         for (var i = 0; i < this._projectiles.length; i++) {
             var projectile = this._projectiles[i];
             if (projectile.isRemoved() || !cc.sys.isObjectValid(projectile.getSprite())) {
@@ -329,25 +406,26 @@ ctor: function () {
             }
         }
     },
-    updateCowTally:function(type){
-        switch (type){
+    updateCowTally: function (type) {
+        switch (type) {
             case g_CowTypes.NORMAL:
-                this.cowTally.normal+=1;
+                this.cowTally.normal += 1;
                 break;
             case g_CowTypes.BLUE:
-                this.cowTally.blue+=1;
+                this.cowTally.blue += 1;
                 break;
             case g_CowTypes.YELLOW:
-                this.cowTally.yellow+=1;
+                this.cowTally.yellow += 1;
                 break;
             case g_CowTypes.RED:
-                this.cowTally.red+=1;
+                this.cowTally.red += 1;
                 break;
             case g_CowTypes.BABY:
-                this.cowTally.baby+=1;
+                this.cowTally.baby += 1;
                 break;
             case g_CowTypes.HORLICKS:
-                this.cowTally.horlicks+=1;
+                this.cowTally.horlicks += 1;
+                this.showHorlicksButton();
                 break;
         }
 
@@ -397,7 +475,9 @@ ctor: function () {
     updateTime: function (px) {
         this.time += px;
 
-
+        if (this.horlicksTime < 0) {
+            this.disableHorlicksMode()
+        }
         if (parseInt(this.time) / 60 >= this.minuteCount && !this.isMinuteOver) {
             this.isMinuteOver = true;
             this.minuteCount++;
@@ -412,6 +492,11 @@ ctor: function () {
         this.labelAmmo.setString("Horlicks: " + parseFloat(this.ammo).toFixed(2));
 
         this.gameTime -= px;
+
+        if (this.horlicksEnabled) {
+            this.horlicksTime -= px;
+        }
+
         if (this.isTimeOver()) {
             cc.log("===gameover")
             cc.log("spawn rate " + this.spawnMultiplier + " accuracy=" + this.accuracy);
@@ -468,6 +553,7 @@ ctor: function () {
         //reseting everything
         this._cows = [],
             this._projectiles = [],
+            this._touches = [],
             this.statusLayer = {},
             this.gameTime = 30,
             /*this.labelScore = null,
@@ -489,12 +575,13 @@ ctor: function () {
             this.projectileCount = 0,
             this.cowCount = 0;
 
-            this.cowTally.baby=0
-            this.cowTally.blue=0
-            this.cowTally.yellow=0
-            this.cowTally.red=0
-            this.cowTally.normal=0
-            this.cowTally.horlicks=0
+        this.cowTally.baby = 0
+        this.cowTally.blue = 0
+        this.cowTally.yellow = 0
+        this.cowTally.red = 0
+        this.cowTally.normal = 0
+        this.cowTally.horlicks = 0
+        this.horlicksEnabled = false
     }
 
 });
