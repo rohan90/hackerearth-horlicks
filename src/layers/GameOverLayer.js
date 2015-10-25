@@ -81,6 +81,7 @@ var GameOverLayer = cc.LayerColor.extend({
         this.textField.setMaxLengthEnabled(true);
         this.textField.setMaxLength(50);
         this.textField.addEventListener(this.textFieldEvent, this);
+        this.textField.retain();
         this.addChild(this.textField);
 
         if (cc.sys.isNative && cc.sys.os == cc.sys.OS_ANDROID)
@@ -132,8 +133,8 @@ var GameOverLayer = cc.LayerColor.extend({
         scoreObj.timeChallenge = this.gameTime;
         scoreObj.timePlayed = this.totalTime;
         scoreObj.accuracy = this.accuracy;
-        if (textField.string)
-            scoreObj.comment = textField.string;
+        if (this.textField.string)
+            scoreObj.comment = this.textField.string;
         else scoreObj.comment = "Random guest.";
         scoreObj.tally = this.cowTally;
 
@@ -150,6 +151,7 @@ var GameOverLayer = cc.LayerColor.extend({
             onKeyReleased: function (key, event) {
                 if (key == cc.KEY.back) {
                     //cc.game.restart();
+                    this.textField.release();
                     cc.director.resume()
                     cc.director.runScene(new MenuScene());
                     //cc.director.end;
@@ -165,6 +167,7 @@ var GameOverLayer = cc.LayerColor.extend({
         this.sentOnce = false;
 
         //cc.game.restart();
+        this.textField.release();
         cc.director.resume();
         cc.director.runScene(new MenuScene());
     },

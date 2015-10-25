@@ -210,19 +210,22 @@ var AnalysisLayer = cc.LayerColor.extend({
         cow1.setLayoutParameter(llp)
         layout.addChild(cow1);
 
+
+
         var cow2 = new ccui.Text();
         cow2.attr({
             textAlign: cc.TEXT_ALIGNMENT_CENTER,
-            string: "" + this.cowTally.yellow,
+            string: "" + this.cowTally.blue,
             font: "Arial"
         });
         cow2.setLayoutParameter(llp)
         layout.addChild(cow2);
 
+        //note this cow3 to lazy to rename
         var cow3 = new ccui.Text();
         cow3.attr({
             textAlign: cc.TEXT_ALIGNMENT_CENTER,
-            string: "" + this.cowTally.blue,
+            string: "" + this.cowTally.yellow,
             font: "Arial"
         });
         cow3.setLayoutParameter(llp)
